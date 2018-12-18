@@ -24,13 +24,17 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
+import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 public class LoginActivity extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener
 {
 
     private FirebaseAuth mAuth;
     private GoogleSignInClient mGoogleSignInClient;
-
+    private FirebaseUser user;
+    FirebaseFirestore db = FirebaseFirestore.getInstance();
+    private CollectionReference userColRef = db.collection("user");
     private static final String TAG = "Google SignIn Firebase";
     private static final int RC_SIGN_IN = 1000;
     private ProgressDialog dialog;
@@ -138,6 +142,12 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
     {
         Log.d("LoginAct", "loadUserInfo s ");
         dialog.dismiss();
+
+        user = mAuth.getCurrentUser();
+
+
+
+
         goMainActivity();
     }
 
