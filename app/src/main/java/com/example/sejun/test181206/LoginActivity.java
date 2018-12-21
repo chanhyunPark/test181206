@@ -18,6 +18,8 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
@@ -25,7 +27,11 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class LoginActivity extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener
 {
@@ -145,16 +151,70 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
 
         user = mAuth.getCurrentUser();
 
+        userColRef.document(user.getUid())
+                .get()
+                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>()
+                {
+                    @Override
+                    public void onSuccess(DocumentSnapshot documentSnapshot)
+                    {
+                        if(documentSnapshot.exists()) //
+                        {
+                            Toast.makeText(LoginActivity.this, "로그인 됨", Toast.LENGTH_SHORT).show();
+                            goMainActivity();
+                        }
+                        else
+                            saveUserInfo();
+                    }
+                });
 
 
-
-        goMainActivity();
     }
 
     private void goMainActivity()
     {
         startActivity(new Intent(LoginActivity.this, MainActivity.class));
         finish();
+    }
+
+    private void saveUserInfo()
+    {
+        Map<String, Object> userMap = new HashMap<>();
+
+        if(user == null)
+            return;
+
+        if(user.getEmail() != null)
+            userMap.put("email", user.getEmail());
+        else
+            userMap.put("email", "sejungpk@naver.com");
+
+        if(user.getDisplayName() != null)
+            userMap.put("nickname", user.getDisplayName());
+        else
+            userMap.put("nickname", "none");
+
+        userColRef.document(user.getUid())
+                .set(userMap)
+                .addOnSuccessListener(new OnSuccessListener<Void>()
+                {
+                    @Override
+                    public void onSuccess(Void aVoid)
+                    {
+                        dialog.dismiss();
+                        goMainActivity();
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener()
+                {
+                    @Override
+                    public void onFailure(@NonNull Exception e)
+                    {
+                        Log.d("tag", "saveUserInfo Fail");
+                        dialog.dismiss();
+                        Toast.makeText(LoginActivity.this, "saveUserInfo failed", Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
 
     @Override
